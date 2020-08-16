@@ -1,2 +1,2 @@
 # azurenetworkpresentation
-Info for 
+Info for my talk on Azure network.
