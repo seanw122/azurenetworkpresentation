@@ -9,6 +9,7 @@ using Pulumi.Azure.Lb.Inputs;
 using Pulumi.Azure.Network;
 using Pulumi.Azure.Network.Inputs;
 using Pulumi.Azure.Storage;
+using pulumicode;
 
 class MyStack : Stack
 {
@@ -50,6 +51,8 @@ class MyStack : Stack
 		//BuildFirewall();
 		BuildRouteTable();
 		//BuildAppGateway();
+
+		new CosmosDB(_ResourceGroup).BuildCosmosDb();
 	}
 
 	// 21 - 2048
@@ -731,4 +734,6 @@ class MyStack : Stack
 			},
 		});
 	}
+
+	
 }

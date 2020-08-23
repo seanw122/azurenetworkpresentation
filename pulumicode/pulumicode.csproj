@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Pulumi.Azure" Version="3.*" />
+    <PackageReference Include="Pulumi.Random" Version="2.2.0" />
   </ItemGroup>
 
 </Project>
