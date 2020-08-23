@@ -10,6 +10,7 @@
 *.userosscache
 *.sln.docstates
 SetEnv.bat
+Pulumi.dev.yaml
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

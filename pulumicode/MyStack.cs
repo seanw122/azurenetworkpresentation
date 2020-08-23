@@ -4,11 +4,11 @@ using Pulumi.Azure.Compute;
 using Pulumi.Azure.Compute.Inputs;
 using Pulumi.Azure.Core;
 using Pulumi.Azure.FrontDoor.Inputs;
-using Pulumi.Azure.FrontDoor.Outputs;
 using Pulumi.Azure.Lb;
 using Pulumi.Azure.Lb.Inputs;
 using Pulumi.Azure.Network;
 using Pulumi.Azure.Network.Inputs;
+using Pulumi.Azure.Storage;
 
 class MyStack : Stack
 {
@@ -17,6 +17,7 @@ class MyStack : Stack
 	private Dictionary<string, Subnet> _Subnets;
 	private List<NetworkInterface> _foodVmNics;
 	private VirtualNetwork _vnet;
+	private Output<string> _stgPrimaryEndpoint;
 
 	public MyStack()
 	{
@@ -34,6 +35,9 @@ class MyStack : Stack
 		});
 
 		_vnet = BuildVNet();
+
+		_stgPrimaryEndpoint = BuildBootDiagStorageAccount();
+
 		BuildNSG();
 
 		BuildSupplierVMs(3);
@@ -44,7 +48,7 @@ class MyStack : Stack
 		BuildGardenVMs(1);
 		BuildFoodLoadBalancer();
 		//BuildFirewall();
-		//BuildRouteTable();
+		BuildRouteTable();
 		//BuildAppGateway();
 	}
 
@@ -59,14 +63,29 @@ class MyStack : Stack
 	// 29 - 8
 
 	//.0 ~ .3 && .255
-	// .1 subnet gateway
+	//.1 subnet gateway
 
 	//255.255.255.0  <-- 255
 
 	//10.0.0.0/8  per subscription and per region
 	//10.0.0.0/8  sub 1; region central us
 	//10.0.0.0/8  sub 1; region east us 2
-	//120.0.128.0
+
+
+	private Output<string> BuildBootDiagStorageAccount()
+	{
+		var stg = new Account("stgBootDiag", new AccountArgs
+		{
+			Name = "stgnwkpresvmbootdiag",
+			ResourceGroupName = _ResourceGroup.Name,
+			Location = _ResourceGroup.Location,
+			AccountKind = "StorageV2",
+			AccountTier="Standard",
+			AccountReplicationType = "LRS"
+		});
+
+		return stg.PrimaryBlobEndpoint;
+	}
 
 	private VirtualNetwork BuildVNet()
 	{
@@ -176,7 +195,7 @@ class MyStack : Stack
 
 		for (int i = 0; i < countOfVMs; i++)
 		{
-			BuildVM(i, "Suppliers", "vm", false);
+			BuildVM(i, "Suppliers", "vmSupplier", false);
 		}
 	}
 
@@ -259,13 +278,18 @@ class MyStack : Stack
 			Protect = protect
 		});
 
-		var vm = new VirtualMachine(vmName, new VirtualMachineArgs
+		new VirtualMachine(vmName, new VirtualMachineArgs
 		{
 			ResourceGroupName = _ResourceGroup.Name,
 			Location = _ResourceGroup.Location,
 			Name = vmName,
 			VmSize = "Standard_B1ms",
 			NetworkInterfaceIds = new[] { nic.Id },
+			BootDiagnostics = new VirtualMachineBootDiagnosticsArgs
+			{
+				Enabled = true,
+				StorageUri = _stgPrimaryEndpoint
+			},
 			OsProfile = new VirtualMachineOsProfileArgs
 			{
 				AdminUsername = "thisisnotadmin",
@@ -334,6 +358,11 @@ class MyStack : Stack
 			VmSize = "Standard_B1ms",
 			NetworkInterfaceIds = new[] { nic.Id },
 			AvailabilitySetId = availabilitySet.Id,
+			BootDiagnostics = new VirtualMachineBootDiagnosticsArgs
+			{
+				Enabled= true,
+				StorageUri = _stgPrimaryEndpoint
+			},
 			OsProfile = new VirtualMachineOsProfileArgs
 			{
 				AdminUsername = "thisisnotadmin",
