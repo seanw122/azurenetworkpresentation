@@ -49,10 +49,12 @@ class MyStack : Stack
 		BuildGardenVMs(1);
 		BuildFoodLoadBalancer();
 		//BuildFirewall();
-		BuildRouteTable();
+		//BuildRouteTable();
 		//BuildAppGateway();
 
-		new CosmosDB(_ResourceGroup).BuildCosmosDb();
+		//new CosmosDB(_ResourceGroup).BuildCosmosDb();
+		
+		new SecondRegion(_vnet);
 	}
 
 	// 21 - 2048
